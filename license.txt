@@ -1,4 +1,4 @@
-Copyright (c) 2012-now(), Ondrej Zara
+Copyright (c) 2012-now(), Ondrej Zara, Joseph Adams
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, 
