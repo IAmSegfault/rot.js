@@ -6,19 +6,19 @@ import * as Color from "../color.js";
  * @class Tile backend
  * @private
  */
-export default class TileGL extends Backend {
+export default class TileGLES2 extends Backend {
 	_gl!: WebGLRenderingContext;
 	_program!: WebGLProgram;
 	_uniforms: {[key:string]: WebGLUniformLocation | null};
 	_glVersion: string;
 	static isSupported() {
-		return !!document.createElement("canvas").getContext("webgl2", {preserveDrawingBuffer:true});
+		return !!document.createElement("canvas").getContext("webgl", {preserveDrawingBuffer:true});
 	}
 
 	constructor() {
 		super();
 		this._uniforms = {};
-		this._glVersion = "webgl2";
+		this._glVersion = "webgl";
 		try {
 			this._gl = this._initWebGL();
 		} catch (e: unknown) {
@@ -202,55 +202,68 @@ export default class TileGL extends Backend {
 	}
 
 	_updateTexture(tileSet: HTMLImageElement) {
+		let textureWidth = tileSet.width;
+		let textureHeight = tileSet.height;
+		this._gl.uniform2fv(this._uniforms["textureSize"], [textureWidth, textureHeight]);
 		createTexture(this._gl, tileSet);
   	}
 }
 
-const UNIFORMS = ["targetPosRel", "tilesetPosAbs", "tileSize", "targetSize", "colorize", "bg", "tint"];
+const UNIFORMS = ["targetPosRel", "tilesetPosAbs", "tileSize", "targetSize", "colorize", "bg", "tint", "textureSize"];
 
 const VS = `
-#version 300 es
+#version 100
 
-in vec2 tilePosRel;
-out vec2 tilesetPosPx;
+attribute vec2 tilePosRel;
+attribute vec2 tilesetPosPx;
 
 uniform vec2 tilesetPosAbs;
 uniform vec2 tileSize;
 uniform vec2 targetSize;
 uniform vec2 targetPosRel;
+varying vec2 vTilePosRel;
+varying vec2 vTilesetPosPx;
 
 void main() {
-	vec2 targetPosPx = (targetPosRel + tilePosRel) * tileSize;
+
+	vTilePosRel = tilePosRel;
+	vTilesetPosPx = tilesetPosPx;
+	vec2 targetPosPx = (targetPosRel + vTilePosRel) * tileSize;
 	vec2 targetPosNdc = ((targetPosPx / targetSize)-0.5)*2.0;
 	targetPosNdc.y *= -1.0;
 
 	gl_Position = vec4(targetPosNdc, 0.0, 1.0);
-	tilesetPosPx = tilesetPosAbs + tilePosRel * tileSize;
+	vTilesetPosPx = tilesetPosAbs + vTilePosRel * tileSize;
 }`.trim()
 
 const FS = `
-#version 300 es
+#version 100
 precision highp float;
-
-in vec2 tilesetPosPx;
-out vec4 fragColor;
+varying vec2 vTilePosRel;
+varying vec2 vTilesetPosPx;
 uniform sampler2D image;
 uniform bool colorize;
 uniform vec4 bg;
 uniform vec4 tint;
+uniform vec2 textureSize;
+
+vec4 texelFetch(sampler2D tex, vec2 size, vec2 coord) {
+    return texture2D(tex, vec2(float(coord.x) / float(size.x), float(coord.y) / float(size.y)));
+}
 
 void main() {
-	fragColor = vec4(0, 0, 0, 1);
 
-	vec4 texel = texelFetch(image, ivec2(tilesetPosPx), 0);
+	vec4 vFragColor = vec4(0, 0, 0, 1);
+	vec4 texel = texelFetch(image, textureSize, vTilesetPosPx);
 
 	if (colorize) {
 		texel.rgb = tint.a * tint.rgb + (1.0-tint.a) * texel.rgb;
-		fragColor.rgb = texel.a*texel.rgb + (1.0-texel.a)*bg.rgb;
-		fragColor.a = texel.a + (1.0-texel.a)*bg.a;
+		vFragColor.rgb = texel.a*texel.rgb + (1.0-texel.a)*bg.rgb;
+		vFragColor.a = texel.a + (1.0-texel.a)*bg.a;
 	} else {
-		fragColor = texel;
+		vFragColor = texel;
 	}
+	gl_FragColor = vFragColor;
 }`.trim()
 
 function createProgram(gl: WebGLRenderingContext, vss: string, fss: string) {

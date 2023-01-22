@@ -4,7 +4,7 @@ import { DisplayOptions, DisplayData } from "./types.js";
  * @class Tile backend
  * @private
  */
-export default class TileGL extends Backend {
+export default class TileGLES2 extends Backend {
     _gl: WebGLRenderingContext;
     _program: WebGLProgram;
     _uniforms: {

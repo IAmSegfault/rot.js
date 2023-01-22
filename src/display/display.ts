@@ -3,17 +3,21 @@ import Hex from "./hex.js";
 import Rect from "./rect.js";
 import Tile from "./tile.js";
 import TileGL from "./tile-gl.js";
+import TileGLES2 from "./tile-gles2.js";
+
 import Term from "./term.js";
 
 import * as Text from "../text.js";
 import { DisplayOptions, DisplayData } from "./types.js";
 import { DEFAULT_WIDTH, DEFAULT_HEIGHT } from "../constants.js";
 
+
 const BACKENDS = {
 	"hex": Hex,
 	"rect": Rect,
 	"tile": Tile,
 	"tile-gl": TileGL,
+	"tile-gles2": TileGLES2,
 	"term": Term
 }
 
@@ -50,6 +54,7 @@ export default class Display {
 	static Hex = Hex;
 	static Tile = Tile;
 	static TileGL = TileGL;
+	static TileGLES2 = TileGLES2;
 	static Term = Term;
 
 	constructor(options: Partial<DisplayOptions> = {}) {

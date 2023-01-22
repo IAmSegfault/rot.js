@@ -7,4 +7,4 @@ declare const _default: {
     Action: typeof Action;
 };
 export default _default;
-export { SpeedActor } from "./speed.js";
+export type { SpeedActor } from "./speed.js";

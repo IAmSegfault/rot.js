@@ -3,6 +3,7 @@ import Hex from "./hex.js";
 import Rect from "./rect.js";
 import Tile from "./tile.js";
 import TileGL from "./tile-gl.js";
+import TileGLES2 from "./tile-gles2.js";
 import Term from "./term.js";
 import { DisplayOptions, DisplayData } from "./types.js";
 /**
@@ -21,6 +22,7 @@ export default class Display {
     static Hex: typeof Hex;
     static Tile: typeof Tile;
     static TileGL: typeof TileGL;
+    static TileGLES2: typeof TileGLES2;
     static Term: typeof Term;
     constructor(options?: Partial<DisplayOptions>);
     /**
